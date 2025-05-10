@@ -22,7 +22,20 @@ def isBot(message):
 async def on_ready():
     print(f'We have logged in as {bot.user}')
 
+@bot.command("gifs")
+async def gifs(ctx):
+    csv_file = "links.csv"
 
+    df = pd.read_csv(csv_file)
+
+    names = df['Name']
+    message = ""
+
+    for name in names:
+        message += f"- {name}\n"
+
+    await ctx.send(message)
+    
 
 @bot.command("upload")
 async def upload_gif(ctx, *, gif_link: str):
