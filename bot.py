@@ -64,6 +64,24 @@ async def upload_gif(ctx, *, gif_link: str):
     except:
         await ctx.send("smth messed up...")
 
+@bot.command("delete")
+async def delete_gif(ctx, *, name: str):
+        
+    try: 
+        csv_file = "links.csv"
+
+        df = pd.read_csv(csv_file)
+
+        existing_index = df.index[df['Name'].str.lower() == name.lower()]
+
+        if not existing_index.empty:
+            df = df.drop(existing_index)
+            await ctx.send(f"Deleted GIF for name: `{name}`")
+
+        df.to_csv(csv_file, index=False, mode='w')
+        return
+    except:
+        await ctx.send("smth messed up...")
 
 @bot.event
 async def on_message(message):
