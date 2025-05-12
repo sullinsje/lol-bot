@@ -40,7 +40,7 @@ async def gifs(ctx):
 @bot.command("upload")
 async def upload_gif(ctx, *, gif_link: str):
     try:
-        gif, name = gif_link.rsplit(" ", 1)
+        gif, name = gif_link.split(" ", 1)
     except ValueError:
         await ctx.send("smth messed up...")
         
