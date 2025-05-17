@@ -13,15 +13,51 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-#This just makes sure that the user is the same and the bot doesnt respond to it's own message
-def isBot(message):
-    if message.author == bot.user:
-        return True
+#region
+words = ['nigga', 'nigger']
+#endregion
 
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
 
+async def send_gif(message):
+    links = "links.csv"
+    df = pd.read_csv(links)
+
+    names = df['Name']
+    
+    for name in names:
+        if name in message.content.lower():
+            try:
+                gif = df['Gif'][df['Name'] == name]
+                await message.channel.send(gif.values[0])
+            except:
+                print("smth messed up...")
+
+async def get_stats(message):
+    for x in words:
+        if x in message.content.lower():
+            stats = "stats.csv"
+            df = pd.read_csv(stats)
+            user = message.author.name
+
+            existing_index = df.index[df['User'].str.lower() == user.lower()]
+
+            if not existing_index.empty:
+                df.loc[df['User'].str.lower() == user.lower(), 'Amount'] += 1
+                amount = df.loc[df['User'].str.lower() == user.lower(), 'Amount'].values[0]
+
+                message_to_send = f"{user} has said the N word {amount} times"
+                await message.channel.send(message_to_send)
+
+            else:
+                new_row = {'User': user, 'Amount': 1}
+                df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+                await message.channel.send(f"{user} has said the N word for the first time in `{message.channel}`")
+
+            df.to_csv(stats, index=False, mode='w')
+            return
 @bot.command("gifs")
 async def gifs(ctx):
     csv_file = "links.csv"
@@ -85,29 +121,12 @@ async def delete_gif(ctx, *, name: str):
 
 @bot.event
 async def on_message(message):
-    if isBot(message):
+    if message.author == bot.user:
         return
 
-    csv_file = "links.csv"
-    df = pd.read_csv(csv_file)
+    await send_gif(message)
+    await get_stats(message)      
 
-    names = df['Name']
-    
-    for name in names:
-        if name in message.content.lower():
-            try:
-                gif = df['Gif'][df['Name'] == name]
-                await message.channel.send(gif.values[0])
-            except:
-                print("smth messed up...")
-            
     await bot.process_commands(message)
       
 bot.run(TOKEN)
-
-
-            # with open("gifs/soren.gif", "rb") as f:
-            #     file = discord.File(f, filename="soren.gif")
-            #     embed = discord.Embed()
-            #     embed.set_image(url="attachment://soren.gif")
-            #     await message.channel.send(file=file, embed=embed)
